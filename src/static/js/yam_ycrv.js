@@ -119,9 +119,6 @@ async function main() {
     _print_link(`Claim ${earnedYFFI} ${rewardTokenTicker}`, claim);
     _print_link(`Exit`, exit);
 
-  await _print24HourPrice("yam", rewardTokenTicker);
-
-
   hideLoading();
 
 
