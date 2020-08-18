@@ -6,13 +6,12 @@ $(function() {
 async function main() {
     const App = await init_ethers();
 
-    const stakingToken = WETH_TOKEN_ADDR;
-    const stakingTokenTicker = "WETH";
-    const rewardPoolAddr = WETH_YAM_CLASSIC_REWARD_POOL_ADDR;
+    const stakingToken = YAM1_TOKEN_ADDR;
+    const stakingTokenTicker = "YAM1";
+    const rewardPoolAddr = YAM1_YAM_CLASSIC_REWARD_POOL_ADDR;
     const rewardTokenAddr = YAM_CLASSIC_TOKEN_ADDR; // yam2
     const rewardTokenTicker = "YAM Classic";
     const REBASER_INSTANCE = new ethers.Contract(REBASER_ADDR, REBASER_ABI, App.provider);
-
 
     _print(`Initialized ${App.YOUR_ADDRESS}`);
     _print("Reading smart contracts...\n");
@@ -24,7 +23,7 @@ async function main() {
     const Y_TOKEN = new ethers.Contract(stakingToken, ERC20_ABI, App.provider);
 
     const YAM_TOKEN = new ethers.Contract(YAM_CLASSIC_TOKEN_ADDR, YAM_TOKEN_ABI, App.provider);
-    const WETH_TOKEN = new ethers.Contract(WETH_TOKEN_ADDR, ERC20_ABI, App.provider);
+    const YAM1_TOKEN = new ethers.Contract(YAM1_TOKEN_ADDR, ERC20_ABI, App.provider);
 
 
     const yamScale = await YAM_TOKEN.yamsScalingFactor() / 1e18;
@@ -52,10 +51,11 @@ async function main() {
     // Look up prices
     // const prices = await lookUpPrices(["yearn-finance"]);
     // const YFIPrice = prices["yearn-finance"].usd;
-    const prices = await lookUpPrices(["ethereum"]);
-    const stakingTokenPrice = prices["ethereum"].usd;
+    const prices = await lookUpPrices(["yam"]);
+    const stakingTokenPrice = prices["yam"].usd;
 
     const rewardTokenPrice = await getCurrentPrice(REBASER_INSTANCE)
+
 
     // Finished. Start printing
 
@@ -111,6 +111,7 @@ async function main() {
     _print_link(`Unstake ${stakedYAmount} ${stakingTokenTicker}`, unstake);
     _print_link(`Claim ${earnedYFFI} ${rewardTokenTicker}`, claim);
     _print_link(`Exit`, exit);
+
 
   hideLoading();
 

@@ -55,6 +55,11 @@ async function init_ethers() {
     return App;
 }
 
+const getCurrentPrice = async function(rebaserInstance) {
+  console.log(rebaserInstance)
+  return (await rebaserInstance.getCurrentTWAP()) / 1e18
+}
+
 const getUrlParameter = function(sParam) {
     let sPageURL = window.location.search.substring(1),
         sURLVariables = sPageURL.split('&'),

@@ -4,15 +4,15 @@ $(function() {
 });
 
 async function main() {
-
-    const stakingTokenAddr = YAM_YCRV_UNI_TOKEN_ADDR;
-    const stakingTokenTicker = "UNIV2";
-    const rewardPoolAddr = "0xADDBCd6A68BFeb6E312e82B30cE1EB4a54497F4c";
-    const rewardTokenAddr = YAM_TOKEN_ADDR;
-    const balancerPoolTokenAddr = "0xc7062D899dd24b10BfeD5AdaAb21231a1e7708fE";
-    const rewardTokenTicker = "YAM";
-
     const App = await init_ethers();
+
+    const stakingToken = YCRV_TOKEN_ADDR;
+    const stakingTokenTicker = "YCRV";
+    const rewardPoolAddr = YCRV_YAM_CLASSIC_REWARD_POOL_ADDR;
+    const rewardTokenAddr = YAM_CLASSIC_TOKEN_ADDR; // yam2
+    const rewardTokenTicker = "YAM Classic";
+    const REBASER_INSTANCE = new ethers.Contract(REBASER_ADDR, REBASER_ABI, App.provider);
+
 
     _print(`Initialized ${App.YOUR_ADDRESS}`);
     _print("Reading smart contracts...\n");
@@ -21,14 +21,10 @@ async function main() {
 
     const REWARD_POOL = new ethers.Contract(rewardPoolAddr, YFFI_REWARD_CONTRACT_ABI, App.provider);
     const CURVE_Y_POOL = new ethers.Contract(CURVE_Y_POOL_ADDR, CURVE_Y_POOL_ABI, App.provider);
-    const STAKING_TOKEN = new ethers.Contract(stakingTokenAddr, ERC20_ABI, App.provider);
+    const STAKING_TOKEN = new ethers.Contract(stakingToken, ERC20_ABI, App.provider);
 
-    const Y_TOKEN = new ethers.Contract(Y_TOKEN_ADDR, ERC20_ABI, App.provider);
-
-    const YAM_TOKEN = new ethers.Contract(YAM_TOKEN_ADDR, YAM_TOKEN_ABI, App.provider);
-
-    const totalYCRVInUniswapPair = await Y_TOKEN.balanceOf(YAM_YCRV_UNI_TOKEN_ADDR) / 1e18;
-    const totalYAMInUniswapPair = await YAM_TOKEN.balanceOf(YAM_YCRV_UNI_TOKEN_ADDR) / 1e18;
+    const YCRV_TOKEN = new ethers.Contract(YCRV_TOKEN_ADDR, ERC20_ABI, App.provider);
+    const YAM_TOKEN = new ethers.Contract(YAM_CLASSIC_TOKEN_ADDR, YAM_TOKEN_ABI, App.provider);
 
     const yamScale = await YAM_TOKEN.yamsScalingFactor() / 1e18;
 
@@ -53,11 +49,10 @@ async function main() {
     _print("Finished reading smart contracts... Looking up prices... \n")
 
     // Look up prices
-    const prices = await lookUpPrices(["yearn-finance", "ethereum", "yam"]);
-    const stakingTokenPrice = (totalYAMInUniswapPair * prices["yam"].usd + totalYCRVInUniswapPair * YVirtualPrice) / totalSupplyOfStakingToken;
+    const prices = await lookUpPrices(["curve-fi-ydai-yusdc-yusdt-ytusd"]);
+    const stakingTokenPrice = prices["curve-fi-ydai-yusdc-yusdt-ytusd"].usd;
 
-    // const rewardTokenPrice = (await YFFI_DAI_BALANCER_POOL.getSpotPrice(LINK_TOKEN_ADDR, rewardTokenAddr) / 1e18) * stakingTokenPrice;
-    const rewardTokenPrice = prices["yam"].usd;
+    const rewardTokenPrice = await getCurrentPrice(REBASER_INSTANCE)
 
     // Finished. Start printing
 
@@ -99,11 +94,11 @@ async function main() {
     _print(`Reward ending      : in ${forHumans(timeTilHalving)} \n`);
 
     const resetApprove = async function() {
-       return rewardsContract_resetApprove(stakingTokenAddr, rewardPoolAddr, App);
+       return rewardsContract_resetApprove(stakingToken, rewardPoolAddr, App);
     };
 
     const approveTENDAndStake = async function () {
-        return rewardsContract_stake(stakingTokenAddr, rewardPoolAddr, App);
+        return rewardsContract_stake(stakingToken, rewardPoolAddr, App);
     };
 
     const unstake = async function() {
@@ -118,16 +113,11 @@ async function main() {
         return rewardsContract_exit(rewardPoolAddr, App);
     };
 
-    print_warning();
-
     _print_link(`Reset approval to 0`, resetApprove);
     _print_link(`Stake ${unstakedY} ${stakingTokenTicker}`, approveTENDAndStake);
     _print_link(`Unstake ${stakedYAmount} ${stakingTokenTicker}`, unstake);
     _print_link(`Claim ${earnedYFFI} ${rewardTokenTicker}`, claim);
     _print_link(`Exit`, exit);
-
-  alert("Warning\n" +
-    "Having liquidity in the YAM/YCRV Uniswap Pool is extremely dangerous because of a bug in the rebase functionality.");
 
   await _print24HourPrice("yam", rewardTokenTicker);
 
